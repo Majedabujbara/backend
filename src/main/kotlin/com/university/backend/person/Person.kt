@@ -1,4 +1,6 @@
 package com.university.backend.person
+import com.university.backend.roles.Role
+import com.university.backend.cafeteria.Cafeteria
 
 import jakarta.persistence.*
 import java.util.UUID

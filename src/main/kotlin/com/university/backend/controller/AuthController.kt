@@ -10,11 +10,23 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/api/auth")
-class AuthController(private val authService: AuthService) {
+class AuthController(
+    private val authService: AuthService
+) {
 
     @PostMapping("/login")
     fun login(@RequestBody request: LoginRequest): ResponseEntity<Any> {
-        val result = authService.authenticateUser(request)
-        return ResponseEntity.ok(mapOf("message" to result))
+
+        val person = authService.authenticateUser(request)
+
+        val response = mapOf(
+            "message" to "Login successful",
+            "personId" to person.personId,
+            "fullName" to person.fullName,
+            "email" to person.email,
+            "role" to person.role?.roleName
+        )
+
+        return ResponseEntity.ok(response)
     }
 }
