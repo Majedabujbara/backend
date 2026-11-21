@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.security.core.Authentication
+import org.springframework.web.bind.annotation.GetMapping
 
 @RestController
 @RequestMapping("/api/auth")
@@ -34,5 +36,15 @@ open class AuthController(
     ): ResponseEntity<LoginResponse> {
         val response = loginService.login(request)
         return ResponseEntity.ok(response)
+    }
+
+    @GetMapping("/me")
+    open fun getCurrentUser(
+        authentication: Authentication
+    ): ResponseEntity<Map<String, String>> {
+
+        return ResponseEntity.ok(
+            mapOf("email" to authentication.name)
+        )
     }
 }

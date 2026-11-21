@@ -6,11 +6,14 @@ import com.university.backend.login.dtos.LoginResponse
 import com.university.backend.person.PersonRepository
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
+import com.university.backend.security.JwtService
 
 @Service
 class LoginService(
     private val personRepository: PersonRepository,
-    private val passwordEncoder: PasswordEncoder
+    private val passwordEncoder: PasswordEncoder,
+    private val jwtService: JwtService
+
 ) {
 
     fun login(request: LoginRequest): LoginResponse {
@@ -27,7 +30,8 @@ class LoginService(
         val personId = person.id?.toInt()
             ?: throw IllegalStateException("Person ID is missing")
 
-        val token = "PENDING_JWT_TOKEN"
+
+        val token = jwtService.generateToken(normalizedEmail)
 
         return LoginResponse(
             accessToken = token,
