@@ -17,7 +17,7 @@ class SecurityConfig {
             .csrf { it.disable() }
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests { auth ->
-                auth.requestMatchers("/api/auth/**").permitAll() // السماح لأي مسار تبدأ به مسارات المصادقة
+                auth.requestMatchers("/api/auth/**").permitAll()
                     .anyRequest().authenticated()
             }
             .formLogin { it.disable() }
