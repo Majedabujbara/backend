@@ -20,7 +20,6 @@ open class AuthController(
     private val registrationService: RegistrationService,
     private val loginService: LoginService
 ) {
-
     @PostMapping("/register")
     open fun register(
         @Valid @RequestBody request: RegisterRequest
