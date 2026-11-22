@@ -3,7 +3,7 @@ package com.university.backend.person
 
 import com.university.backend.cafeteria.Cafeteria
 import com.university.backend.roles.Role
-
+import java.time.LocalDateTime
 import jakarta.persistence.*
 
 @Entity
@@ -23,41 +23,49 @@ class Person {
     @Column(name = "person_id")
     var id: Long? = null
 
-    @Column(
-        name = "full_name",
-        nullable = false
-    )
-    var fullName: String = ""
+    @Column(name = "first_name", nullable = false, length = 75)
+    var firstName: String = ""
+
+    @Column(name = "last_name", nullable = false, length = 75)
+    var lastName: String = ""
 
     @Column(
         name = "phone",
-        nullable = false
+        nullable = false, length = 20
     )
     var phone: String = ""
 
     @Column(
         name = "email",
         nullable = false,
-        unique = true
+        unique = true, length = 150
     )
     var email: String = ""
 
     @Column(
-        name = "password",
+        name = "hash_password",
         nullable = false
     )
-    var passwordHash: String = ""
+    var hashPassword: String = ""
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(
         name = "role_id",
-        nullable = false
+        nullable = false,
+        foreignKey = ForeignKey(name = "fk_people_role")
     )
     var role: Role? = null
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
-        name = "cafeteria_id"
+        name = "cafeteria_id",
+        foreignKey = ForeignKey(name = "fk_people_cafeteria")
     )
     var cafeteria: Cafeteria? = null
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    var createdAt: LocalDateTime = LocalDateTime.now()
+
+    val fullName: String
+        get() = "$firstName $lastName".trim()
 }
