@@ -95,4 +95,18 @@ class GlobalExceptionHandler {
             .status(HttpStatus.UNAUTHORIZED)
             .body(response)
     }
+
+    @ExceptionHandler(UserNotFoundException::class)
+    fun handleUserNotFound(
+        exception: UserNotFoundException
+    ): ResponseEntity<ApiErrorResponse> {
+
+        val response = ApiErrorResponse(
+            message = exception.message ?: "User not found"
+        )
+
+        return ResponseEntity
+            .status(HttpStatus.NOT_FOUND)
+            .body(response)
+    }
 }
