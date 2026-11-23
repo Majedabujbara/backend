@@ -24,7 +24,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-webmvc")
-
+    implementation("org.springframework.boot:spring-boot-starter-mail")
     // 1. مكتبة قواعد البيانات و JPA
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
