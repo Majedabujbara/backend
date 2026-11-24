@@ -38,7 +38,8 @@ class Person {
     @Column(
         name = "email",
         nullable = false,
-        unique = true, length = 150
+        unique = true,
+        length = 150
     )
     var email: String = ""
 
