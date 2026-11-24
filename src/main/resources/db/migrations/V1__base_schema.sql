@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS cafeterias (
 
 CREATE TABLE IF NOT EXISTS people (
                                       person_id BIGSERIAL PRIMARY KEY,
-                                      first_name VARCHAR(75) NOT NULL,
+                                      full_name VARCHAR(75) NOT NULL,
     last_name VARCHAR(75) NOT NULL,
     phone VARCHAR(20) NOT NULL,
     email VARCHAR(150) NOT NULL UNIQUE,

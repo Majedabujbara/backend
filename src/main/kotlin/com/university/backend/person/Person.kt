@@ -23,11 +23,9 @@ class Person {
     @Column(name = "person_id")
     var id: Long? = null
 
-    @Column(name = "first_name", nullable = false, length = 75)
-    var firstName: String = ""
+    @Column(name = "full_name", nullable = false, length = 75)
+    var fullName: String = ""
 
-    @Column(name = "last_name", nullable = false, length = 75)
-    var lastName: String = ""
 
     @Column(
         name = "phone",
@@ -66,6 +64,4 @@ class Person {
     @Column(name = "created_at", nullable = false, updatable = false)
     var createdAt: LocalDateTime = LocalDateTime.now()
 
-    val fullName: String
-        get() = "$firstName $lastName".trim()
 }
