@@ -8,8 +8,7 @@ class Role(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "role_id")
-    var roleId: Int? = null,
-
-    @Column(name = "role_name", nullable = false, unique = true)
+    var id: Long? = null,
+    @Column(name = "role_name", nullable = false, unique = true, length = 50)
     var roleName: String = ""
 )

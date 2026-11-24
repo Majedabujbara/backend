@@ -22,7 +22,7 @@ class LoginService(
         val person = personRepository.findByEmail(normalizedEmail)
             .orElseThrow { InvalidCredentialsException("Invalid email or password") }
 
-        if (!passwordEncoder.matches(request.password, person.passwordHash)) {
+        if (!passwordEncoder.matches(request.password, person.hashPassword)) {
             throw InvalidCredentialsException("Invalid email or password")
         }
 

@@ -1,6 +1,8 @@
 
 package com.university.backend.person
 
+import com.university.backend.person.dtos.UserResponse
+import com.university.backend.exceptions.UserNotFoundException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.security.crypto.password.PasswordEncoder
@@ -71,4 +73,19 @@ class UserService(
         personRepository.save(person)
     }
 
+}
+    private val personRepository: PersonRepository
+) {
+    fun getUserById(id: Long): UserResponse {
+        val person = personRepository.findById(id).orElseThrow {
+            UserNotFoundException("User with ID $id not found")
+        }
+
+        return UserResponse(
+            personId = requireNotNull(person.id),
+            fullName = person.fullName,
+            email = person.email,
+            roleName = person.role?.roleName ?: "UNKNOWN"
+        )
+    }
 }
