@@ -58,7 +58,7 @@ class UserController(
         )
     }
 
-}
+
     @GetMapping("/{id}")
     fun getUserById(@PathVariable id: Long): UserResponse {
         return userService.getUserById(id)

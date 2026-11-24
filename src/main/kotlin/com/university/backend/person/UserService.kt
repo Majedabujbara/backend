@@ -1,17 +1,15 @@
-
 package com.university.backend.person
 
-import com.university.backend.person.dtos.UserResponse
 import com.university.backend.exceptions.UserNotFoundException
+import com.university.backend.person.dtos.UserResponse
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import org.springframework.security.crypto.password.PasswordEncoder
 
 @Service
 class UserService(
     private val personRepository: PersonRepository,
     private val passwordEncoder: PasswordEncoder
-
 ) {
 
     @Transactional
@@ -42,7 +40,6 @@ class UserService(
         return personRepository.save(person)
     }
 
-
     @Transactional
     fun changePassword(
         email: String,
@@ -55,7 +52,7 @@ class UserService(
                 NoSuchElementException("User not found")
             }
 
-        if (!passwordEncoder.matches(currentPassword, person.passwordHash)) {
+        if (!passwordEncoder.matches(currentPassword, person.hashPassword)) {
             throw IllegalArgumentException("Current password is incorrect")
         }
 
@@ -67,15 +64,13 @@ class UserService(
             throw IllegalArgumentException("New password must be different")
         }
 
-        person.passwordHash = passwordEncoder.encode(newPassword)
+        person.hashPassword = passwordEncoder.encode(newPassword)
             ?: throw IllegalStateException("Password encoding failed")
 
         personRepository.save(person)
     }
 
-}
-    private val personRepository: PersonRepository
-) {
+    @Transactional(readOnly = true)
     fun getUserById(id: Long): UserResponse {
         val person = personRepository.findById(id).orElseThrow {
             UserNotFoundException("User with ID $id not found")
