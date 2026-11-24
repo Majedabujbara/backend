@@ -4,6 +4,7 @@ import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
+import org.springframework.security.access.AccessDeniedException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
@@ -83,6 +84,7 @@ class GlobalExceptionHandler {
             .status(HttpStatus.CONFLICT)
             .body(response)
     }
+
     // Handle invalid login credentials
     @ExceptionHandler(value = [InvalidCredentialsException::class])
     open fun handleInvalidCredentials(
@@ -96,6 +98,16 @@ class GlobalExceptionHandler {
             .body(response)
     }
 
+    // Handle access denied (insufficient role/permissions)
+    @ExceptionHandler(AccessDeniedException::class)
+    fun handleAccessDenied(
+        exception: AccessDeniedException
+    ): ResponseEntity<ApiErrorResponse> {
+        val response = ApiErrorResponse(
+            message = exception.message ?: "You do not have permission to perform this action"
+        )
+        return ResponseEntity
+            .status(HttpStatus.FORBIDDEN)
     @ExceptionHandler(UserNotFoundException::class)
     fun handleUserNotFound(
         exception: UserNotFoundException
