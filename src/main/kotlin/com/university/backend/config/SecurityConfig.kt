@@ -9,7 +9,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
-
+import jakarta.servlet.DispatcherType
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -25,9 +25,12 @@ class SecurityConfig(
                 it.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             }
             .authorizeHttpRequests { auth ->
+                auth.dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
+
                 auth.requestMatchers(
                     "/api/auth/register",
-                    "/api/auth/login"
+                    "/api/auth/login",
+                    "/api/auth/refresh"
                 ).permitAll()
                     .requestMatchers("/api/roles/**").hasRole("ADMIN")
                     .anyRequest().authenticated()

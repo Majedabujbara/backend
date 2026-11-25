@@ -61,7 +61,5 @@ class Person {
     )
     var cafeteria: Cafeteria? = null
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    var createdAt: LocalDateTime = LocalDateTime.now()
 
 }
