@@ -2,7 +2,7 @@ package com.university.backend.person
 
 import com.university.backend.exceptions.UserNotFoundException
 import com.university.backend.person.dtos.UserResponse
-import org.springframework.data.crossstore.ChangeSetPersister
+import com.university.backend.session.SessionRepository
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -10,7 +10,8 @@ import org.springframework.transaction.annotation.Transactional
 @Service
 class UserService(
     private val personRepository: PersonRepository,
-    private val passwordEncoder: PasswordEncoder
+    private val passwordEncoder: PasswordEncoder,
+    private val sessionRepository: SessionRepository
 ) {
 
     @Transactional
@@ -81,6 +82,7 @@ class UserService(
             personId = requireNotNull(person.id),
             fullName = person.fullName,
             email = person.email,
+            phone = person.phone,
             roleName = person.role?.roleName ?: "UNKNOWN"
         )
     }
@@ -92,6 +94,7 @@ class UserService(
                 personId = it.id!!,
                 fullName = it.fullName,
                 email = it.email,
+                phone = it.phone,
                 roleName = it.role?.roleName ?: "UNKNOWN"
             )
         }
@@ -102,6 +105,9 @@ class UserService(
         val person = personRepository.findById(id).orElseThrow({
             UserNotFoundException("User with ID $id not found")
         })
+
+
+        sessionRepository.deleteAll(sessionRepository.findAllByPerson_Id(id))
 
         personRepository.delete(person)
 
