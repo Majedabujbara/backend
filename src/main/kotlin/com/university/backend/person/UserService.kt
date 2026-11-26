@@ -106,10 +106,8 @@ class UserService(
             UserNotFoundException("User with ID $id not found")
         })
 
-        // sessions.person_id references people, so remove the user's
-        // login sessions first or the database rejects the delete.
+
         sessionRepository.deleteAll(sessionRepository.findAllByPerson_Id(id))
-        sessionRepository.flush()
 
         personRepository.delete(person)
 
