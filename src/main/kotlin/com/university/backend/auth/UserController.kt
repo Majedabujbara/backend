@@ -10,6 +10,7 @@ import com.university.backend.person.dtos.ChangePasswordRequest
 import org.springframework.security.core.Authentication
 
 import com.university.backend.person.dtos.UserResponse
+import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
@@ -63,4 +64,17 @@ class UserController(
     fun getUserById(@PathVariable id: Long): UserResponse {
         return userService.getUserById(id)
     }
+
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    fun deleteUserById(@PathVariable id: Long) {
+        userService.deleteUserById(id)
+    }
+
+    @GetMapping
+    fun getAllUsers() : List<UserResponse> {
+        return userService.getAllUsers()
+    }
+
 }

@@ -2,6 +2,7 @@ package com.university.backend.person
 
 import com.university.backend.exceptions.UserNotFoundException
 import com.university.backend.person.dtos.UserResponse
+import org.springframework.data.crossstore.ChangeSetPersister
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -83,4 +84,28 @@ class UserService(
             roleName = person.role?.roleName ?: "UNKNOWN"
         )
     }
+
+    @Transactional(readOnly = true)
+    fun getAllUsers(): List<UserResponse> {
+        return personRepository.findAll().map {
+            UserResponse(
+                personId = it.id!!,
+                fullName = it.fullName,
+                email = it.email,
+                roleName = it.role?.roleName ?: "UNKNOWN"
+            )
+        }
+    }
+
+    @Transactional
+    fun deleteUserById(id: Long) {
+        val person = personRepository.findById(id).orElseThrow({
+            UserNotFoundException("User with ID $id not found")
+        })
+
+        personRepository.delete(person)
+
+    }
+
+
 }
