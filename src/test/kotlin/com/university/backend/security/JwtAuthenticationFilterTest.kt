@@ -49,12 +49,20 @@ class JwtAuthenticationFilterTest {
         expiresAt = Instant.now().plusSeconds(3600)
     }
 
-    /** Stores [p] and an active session for it; returns a real access token. */
-    private fun signedInAs(p: Person, sessionId: Long = 100, revoked: Boolean = false): String {
+    /**
+     * Stores [p] and an active session for it; returns a real access token.
+     * The token's role is the user's database role unless [tokenRole] is given.
+     */
+    private fun signedInAs(
+        p: Person,
+        sessionId: Long = 100,
+        revoked: Boolean = false,
+        tokenRole: String = p.role?.roleName ?: "CUSTOMER"
+    ): String {
         `when`(personRepository.findByEmail(p.email)).thenReturn(Optional.of(p))
         `when`(sessionRepository.findById(sessionId))
             .thenReturn(Optional.of(session(sessionId, p, revoked)))
-        return jwtService.generateAccessToken(p.email, sessionId)
+        return jwtService.generateAccessToken(p.email, sessionId, tokenRole)
     }
 
     /** Runs the filter and returns the Authentication seen by the next filter in the chain. */
@@ -125,12 +133,20 @@ class JwtAuthenticationFilterTest {
         `when`(personRepository.findByEmail(other.email)).thenReturn(Optional.of(other))
         `when`(sessionRepository.findById(100L)).thenReturn(Optional.of(session(100, owner)))
 
-        assertThat(runFilter("Bearer ${jwtService.generateAccessToken(other.email, 100)}")).isNull()
+        assertThat(runFilter("Bearer ${jwtService.generateAccessToken(other.email, 100, "CUSTOMER")}")).isNull()
     }
 
     @Test
-    fun `user without a role fails validation - not authenticated`() {
+    fun `user without a role - not authenticated`() {
         val token = signedInAs(person(15, "norole@example.com", null, null))
+
+        assertThat(runFilter("Bearer $token")).isNull()
+    }
+
+    @Test
+    fun `token role differs from the user's current role - not authenticated`() {
+        // e.g. an EMPLOYEE token kept after the user was changed to CUSTOMER
+        val token = signedInAs(person(15, "emp1.eng@emp.com", "CUSTOMER", null), tokenRole = "EMPLOYEE")
 
         assertThat(runFilter("Bearer $token")).isNull()
     }

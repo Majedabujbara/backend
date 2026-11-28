@@ -11,7 +11,7 @@ interface CurrentUserProvider {
     /** The signed-in user, or null when the request has no valid token. */
     fun currentUserOrNull(): AuthenticatedUser?
 
-    /** The signed-in user; throws (-> 403) when the request has no valid token. */
+    /** The signed-in user; throws (-> 401) when the request has no valid token. */
     fun currentUser(): AuthenticatedUser =
         currentUserOrNull()
             ?: throw AuthenticationCredentialsNotFoundException("No authenticated user")

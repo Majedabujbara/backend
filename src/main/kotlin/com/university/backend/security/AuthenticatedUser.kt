@@ -29,7 +29,7 @@ data class JwtAuthenticatedUser(
 ) : AuthenticatedUser, Principal {
 
     // Never put a half-filled user in the SecurityContext. If this throws inside
-    // JwtAuthenticationFilter, the request simply stays unauthenticated (-> 403).
+    // JwtAuthenticationFilter, the request simply stays unauthenticated (-> 401).
     init {
         require(userId > 0) { "userId must be positive" }
         require(email.isNotBlank()) { "email must not be blank" }

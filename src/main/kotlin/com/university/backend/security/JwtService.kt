@@ -23,7 +23,11 @@ class JwtService(
     }
 
     // 1. Generate Access Token
-    fun generateAccessToken(email: String, sessionId: Long): String {
+    fun generateAccessToken(
+        email: String,
+        sessionId: Long,
+        role:String
+    ): String {
         val now = Date()
         val expirationDate = Date(
             now.time + jwtProperties.accessTokenExpiration
@@ -34,6 +38,7 @@ class JwtService(
             .subject(email)
             .claim("type", "access")
             .claim("sessionId", sessionId)
+            .claim("role", role)
             .issuedAt(now)
             .expiration(expirationDate)
             .signWith(signingKey)
@@ -86,6 +91,11 @@ class JwtService(
             .toLong()
     }
 
+    // Extract Role
+    fun extractRole(token: String): String {
+        return parseToken(token).get("role", String::class.java)
+    }
+
     // 5. Validate Access Token
     fun isAccessTokenValid(token: String): Boolean {
 
@@ -96,7 +106,8 @@ class JwtService(
                 .payload
 
             return claims.get("type", String::class.java) == "access" &&
-                    claims.get("sessionId", Number::class.java) != null
+                    claims.get("sessionId", Number::class.java) != null &&
+                    claims.get("role", String::class.java) != null
 
 
     }
