@@ -7,6 +7,8 @@ import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import jakarta.validation.ConstraintViolationException
+import org.springframework.security.access.AccessDeniedException
 
 data class ApiErrorResponse(
 
@@ -121,4 +123,18 @@ class GlobalExceptionHandler {
         )
         return ResponseEntity.badRequest().body(response)
     }
+
+    @ExceptionHandler(ConstraintViolationException::class)
+    fun handleConstraintViolation(
+        exception: ConstraintViolationException
+    ): ResponseEntity<ApiErrorResponse> {
+        val errors = exception.constraintViolations.associate {
+            it.propertyPath.toString().substringAfterLast('.') to (it.message ?: "Invalid value")
+        }
+        return ResponseEntity.badRequest().body(
+            ApiErrorResponse(message = "Validation failed", errors = errors)
+        )
+    }
+
+
 }
