@@ -9,7 +9,7 @@ import com.university.backend.person.PersonRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
-@Service
+//@Service
 @Transactional(readOnly = true)
 open class EmployeeAssignmentService(
     private val personRepository: PersonRepository,
