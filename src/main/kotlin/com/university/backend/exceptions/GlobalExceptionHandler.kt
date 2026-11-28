@@ -1,5 +1,6 @@
 package com.university.backend.exceptions
 
+import io.jsonwebtoken.JwtException
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -107,6 +108,20 @@ class GlobalExceptionHandler {
 
         return ResponseEntity
             .status(HttpStatus.NOT_FOUND)
+            .body(response)
+    }
+
+    @ExceptionHandler(JwtException::class)
+    fun handleJwtException(
+        exception: JwtException
+    ): ResponseEntity<ApiErrorResponse> {
+
+        val response = ApiErrorResponse(
+            message = "Invalid or expired token"
+        )
+
+        return ResponseEntity
+            .status(HttpStatus.UNAUTHORIZED)
             .body(response)
     }
 }
