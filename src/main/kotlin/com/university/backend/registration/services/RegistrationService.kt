@@ -28,7 +28,7 @@ class RegistrationService(
     @Transactional
     fun register(request: RegisterRequest): RegisterResponse {
 
-        val normalizedEmail = request.email.lowercase()
+        val normalizedEmail = request.email.trim().lowercase()
 
         if (personRepository.findByEmail(normalizedEmail).isPresent) {
             throw EmailAlreadyExistsException(
@@ -44,7 +44,7 @@ class RegistrationService(
         val hashedPassword = passwordEncoder.encode(request.password)!!
 
         val person = Person().apply {
-            val cleanFullName = request.fullName.trim()
+            fullName = request.fullName.trim()
             phone = request.phone.trim()
             email = normalizedEmail
             hashPassword = hashedPassword
