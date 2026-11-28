@@ -2,8 +2,7 @@ package com.university.backend.refresh.services
 
 import com.university.backend.config.JwtProperties
 import com.university.backend.exceptions.InvalidCredentialsException
-import com.university.backend.refresh.dtos.RefreshRequest
-import com.university.backend.refresh.dtos.RefreshResponse
+import com.university.backend.login.services.TokenResult
 import com.university.backend.security.JwtService
 import com.university.backend.session.SessionRepository
 import org.springframework.stereotype.Service
@@ -18,20 +17,21 @@ class RefreshService(
 ) {
 
     @Transactional
-    fun refresh(request: RefreshRequest): RefreshResponse {
-        val refreshToken = request.refreshToken
+    fun refresh(refreshToken: String): TokenResult {
 
-        if (!jwtService.isRefreshTokenValid(refreshToken)) {
+        val claims = jwtService.parseToken(refreshToken)
+
+        if (claims.get("type", String::class.java) != "refresh") {
             throw InvalidCredentialsException("Invalid or expired refresh token")
         }
 
-        val email = jwtService.extractUsername(refreshToken)
-        val tokenHash = jwtService.hashToken(refreshToken)
+        val email = claims.subject
 
-        val session = sessionRepository.findByToken(tokenHash)
+        val session = sessionRepository.findByToken(jwtService.hashToken(refreshToken))
             .orElseThrow {
                 InvalidCredentialsException("Invalid or expired refresh token")
             }
+        sessionRepository.save(session)
 
         if (
             session.revoked ||
@@ -47,6 +47,9 @@ class RefreshService(
         session.expiresAt = Instant.now()
             .plusMillis(jwtProperties.refreshTokenExpiration)
 
+
+        println("Updated session ID: ${session.sessionId}")
+        println("New stored hash: ${session.token.take(12)}")
         sessionRepository.save(session)
 
         val newAccessToken = jwtService.generateAccessToken(
@@ -54,7 +57,7 @@ class RefreshService(
             session.sessionId!!
         )
 
-        return RefreshResponse(
+        return TokenResult(
             accessToken = newAccessToken,
             refreshToken = newRefreshToken
         )

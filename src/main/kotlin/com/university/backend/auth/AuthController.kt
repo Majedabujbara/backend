@@ -15,16 +15,20 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.security.core.Authentication
 import org.springframework.web.bind.annotation.GetMapping
-import com.university.backend.refresh.dtos.RefreshRequest
-import com.university.backend.refresh.dtos.RefreshResponse
+import org.springframework.web.bind.annotation.CookieValue
 import com.university.backend.refresh.services.RefreshService
+import com.university.backend.config.JwtProperties
+import org.springframework.http.HttpHeaders
+import org.springframework.http.ResponseCookie
+import java.time.Duration
 
 @RestController
 @RequestMapping("/api/auth")
 open class AuthController(
     private val registrationService: RegistrationService,
     private val loginService: LoginService,
-    private val refreshService: RefreshService
+    private val refreshService: RefreshService,
+    private val jwtProperties: JwtProperties
 ) {
     @PostMapping("/register")
     open fun register(
@@ -38,8 +42,30 @@ open class AuthController(
     open fun login(
         @Valid @RequestBody request: LoginRequest
     ): ResponseEntity<LoginResponse> {
-        val response = loginService.login(request)
-        return ResponseEntity.ok(response)
+        val result = loginService.login(request)
+
+        val refreshCookie = ResponseCookie.from(
+            "refreshToken",
+            result.refreshToken
+        )
+            .httpOnly(true)
+            .secure(false)
+            .path("/api/auth")
+            .sameSite("Lax")
+            .maxAge(Duration.ofMillis(jwtProperties.refreshTokenExpiration))
+            .build()
+
+        val response = LoginResponse(
+            accessToken = result.accessToken,
+            personId = result.personId,
+            fullName = result.fullName,
+            email = result.email,
+            roleName = result.roleName
+        )
+
+        return ResponseEntity.ok()
+            .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+            .body(response)
     }
 
     @GetMapping("/me")
@@ -54,9 +80,29 @@ open class AuthController(
 
     @PostMapping("/refresh")
     open fun refresh(
-        @Valid @RequestBody request: RefreshRequest
-    ): ResponseEntity<RefreshResponse> {
-        val response = refreshService.refresh(request)
-        return ResponseEntity.ok(response)
+        @CookieValue("refreshToken") refreshToken: String
+    ): ResponseEntity<Map<String, String>> {
+
+        val result = refreshService.refresh(refreshToken)
+
+        val refreshCookie = ResponseCookie.from(
+            "refreshToken",
+            result.refreshToken
+        )
+            .httpOnly(true)
+            .secure(false)
+            .path("/api/auth")
+            .sameSite("Lax")
+            .maxAge(Duration.ofMillis(jwtProperties.refreshTokenExpiration))
+            .build()
+
+        val response = mapOf(
+            "accessToken" to result.accessToken,
+            "tokenType" to "Bearer"
+        )
+
+        return ResponseEntity.ok()
+            .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+            .body(response)
     }
 }

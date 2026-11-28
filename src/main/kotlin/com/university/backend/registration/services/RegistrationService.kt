@@ -28,7 +28,7 @@ class RegistrationService(
     @Transactional
     fun register(request: RegisterRequest): RegisterResponse {
 
-        val normalizedEmail = request.email.lowercase()
+        val normalizedEmail = request.email.trim().lowercase()
 
         if (personRepository.findByEmail(normalizedEmail).isPresent) {
             throw EmailAlreadyExistsException(
