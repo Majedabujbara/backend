@@ -2,7 +2,6 @@ package com.university.backend.login.services
 
 import com.university.backend.exceptions.InvalidCredentialsException
 import com.university.backend.login.dtos.LoginRequest
-import com.university.backend.login.dtos.LoginResponse
 import com.university.backend.person.PersonRepository
 import com.university.backend.security.JwtService
 import com.university.backend.session.Session
@@ -12,6 +11,20 @@ import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
+
+data class TokenResult(
+    val accessToken: String,
+    val refreshToken: String
+)
+
+data class LoginResult(
+    val accessToken: String,
+    val refreshToken: String,
+    val personId: Int,
+    val fullName: String,
+    val email: String,
+    val roleName: String
+)
 
 @Service
 class LoginService(
@@ -23,7 +36,7 @@ class LoginService(
 ) {
 
     @Transactional
-    fun login(request: LoginRequest): LoginResponse {
+    fun login(request: LoginRequest): LoginResult {
 
         val normalizedEmail = request.email.trim().lowercase()
 
@@ -31,6 +44,10 @@ class LoginService(
             .orElseThrow {
                 InvalidCredentialsException("Invalid email or password")
             }
+
+        println("Email found: ${person.email}")
+        println("Password hash exists: ${person.hashPassword.isNotBlank()}")
+        println("Password matches: ${passwordEncoder.matches(request.password, person.hashPassword)}")
 
         if (!passwordEncoder.matches(request.password, person.hashPassword)) {
             throw InvalidCredentialsException("Invalid email or password")
@@ -69,7 +86,7 @@ class LoginService(
             savedSession.sessionId!!
         )
 
-        return LoginResponse(
+        return LoginResult(
             accessToken = accessToken,
             refreshToken = refreshToken,
             personId = personId.toInt(),

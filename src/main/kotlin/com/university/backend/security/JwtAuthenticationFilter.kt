@@ -96,6 +96,7 @@ class JwtAuthenticationFilter(
 
         } catch (e: Exception) {
             SecurityContextHolder.clearContext()
+            logger.warn("JWT authentication failed", e)
         }
 
         filterChain.doFilter(request, response)

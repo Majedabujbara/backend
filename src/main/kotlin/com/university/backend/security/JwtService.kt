@@ -10,6 +10,7 @@ import java.util.UUID
 import java.security.MessageDigest
 import java.util.HexFormat
 import javax.crypto.SecretKey
+import io.jsonwebtoken.Claims
 
 @Service
 class JwtService(
@@ -66,6 +67,14 @@ class JwtService(
             .subject
     }
 
+    fun parseToken(token: String): Claims {
+        return Jwts.parser()
+            .verifyWith(signingKey)
+            .build()
+            .parseSignedClaims(token)
+            .payload
+    }
+
     // 4. Extract Session ID
     fun extractSessionId(token: String): Long {
         return Jwts.parser()
@@ -79,35 +88,30 @@ class JwtService(
 
     // 5. Validate Access Token
     fun isAccessTokenValid(token: String): Boolean {
-        return try {
+
             val claims = Jwts.parser()
                 .verifyWith(signingKey)
                 .build()
                 .parseSignedClaims(token)
                 .payload
 
-            claims.get("type", String::class.java) == "access" &&
+            return claims.get("type", String::class.java) == "access" &&
                     claims.get("sessionId", Number::class.java) != null
 
-        } catch (e: Exception) {
-            false
-        }
+
     }
 
     // 6. Validate Refresh Token
     fun isRefreshTokenValid(token: String): Boolean {
-        return try {
+
             val claims = Jwts.parser()
                 .verifyWith(signingKey)
                 .build()
                 .parseSignedClaims(token)
                 .payload
 
-            claims.get("type", String::class.java) == "refresh"
+        return  claims.get("type", String::class.java) == "refresh"
 
-        } catch (e: Exception) {
-            false
-        }
     }
 
     // 7. Hash Refresh Token
