@@ -1,9 +1,8 @@
 package com.university.backend.person
 
-
 import com.university.backend.cafeteria.Cafeteria
 import com.university.backend.roles.Role
-import java.time.LocalDateTime
+import com.university.backend.roles.RoleEnum
 import jakarta.persistence.*
 
 @Entity
@@ -16,35 +15,36 @@ import jakarta.persistence.*
         )
     ]
 )
-class Person {
+open class Person {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "person_id")
-    var id: Long? = null
+    open var id: Long? = null
 
     @Column(name = "full_name", nullable = false, length = 75)
-    var fullName: String = ""
-
+    open var fullName: String = ""
 
     @Column(
         name = "phone",
-        nullable = false, length = 20
+        nullable = false,
+        length = 20
     )
-    var phone: String = ""
+    open var phone: String = ""
 
     @Column(
         name = "email",
         nullable = false,
-        unique = true, length = 150
+        unique = true,
+        length = 150
     )
-    var email: String = ""
+    open var email: String = ""
 
     @Column(
         name = "hash_password",
         nullable = false
     )
-    var hashPassword: String = ""
+    open var hashPassword: String = ""
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(
@@ -52,14 +52,22 @@ class Person {
         nullable = false,
         foreignKey = ForeignKey(name = "fk_people_role")
     )
-    var role: Role? = null
+    open var role: Role? = null
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
         name = "cafeteria_id",
+        nullable = true,
         foreignKey = ForeignKey(name = "fk_people_cafeteria")
     )
-    var cafeteria: Cafeteria? = null
+    open var cafeteria: Cafeteria? = null
 
-
+    @PrePersist
+    @PreUpdate
+    fun validateEmployeeCafeteria() {
+        val currentRoleName = role?.roleName?.trim()?.uppercase()
+        if (currentRoleName == RoleEnum.EMPLOYEE.name && cafeteria == null) {
+            throw IllegalStateException("Employee must be assigned to a cafeteria.")
+        }
+    }
 }
