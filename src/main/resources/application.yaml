@@ -17,4 +17,9 @@ spring:
 
 jwt:
   secret: ${JWT_SECRET:TDjIG6AKuue3YO7itqTEDX5MRGt9wSfpNrhWip8o9b8=}
-  expiration: 86400000
+  access-token-expiration: 3600000
+  refresh-token-expiration: 604800000
+
+logging:
+  level:
+    org.springframework.security: TRACE

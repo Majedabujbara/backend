@@ -10,4 +10,6 @@ interface SessionRepository : JpaRepository<Session, Long> {
     fun findByToken(token: String): Optional<Session>
 
     fun findAllByPerson_Id(personId: Long): List<Session>
+
+    fun findByPerson_IdAndRevokedFalse(personId: Long): Optional<Session>
 }
