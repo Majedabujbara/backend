@@ -3,6 +3,8 @@ package com.university.backend.employees
 import com.university.backend.cafeteria.CafeteriaRepository
 import com.university.backend.employees.dtos.AssignCafeteriaRequest
 import com.university.backend.employees.dtos.EmployeeResponse
+import com.university.backend.exceptions.CafeteriaNotFoundException
+import com.university.backend.exceptions.InvalidEmployeeRoleException
 import com.university.backend.exceptions.UserNotFoundException
 import com.university.backend.person.Person
 import com.university.backend.person.PersonRepository
@@ -28,19 +30,20 @@ open class EmployeeAssignmentService(
 
         val roleName = person.role?.roleName
         if (roleName == null || !roleName.equals("EMPLOYEE", ignoreCase = true)) {
-            throw IllegalArgumentException("User with id $employeeId does not have EMPLOYEE role")
+            throw InvalidEmployeeRoleException(employeeId, roleName ?: "NONE")
         }
 
         val targetCafeteriaId = request.cafeteriaId
             ?: throw IllegalArgumentException("cafeteriaId is required")
 
         val cafeteria = cafeteriaRepository.findById(targetCafeteriaId)
-            .orElseThrow { IllegalArgumentException("Cafeteria not found with id: $targetCafeteriaId") }
+            .orElseThrow { CafeteriaNotFoundException(targetCafeteriaId.toLong()) }
 
         person.cafeteria = cafeteria
         val updated = personRepository.save(person)
         return updated.toEmployeeResponse()
     }
+        }
 
     private fun Person.toEmployeeResponse(): EmployeeResponse {
         return EmployeeResponse(
@@ -52,4 +55,3 @@ open class EmployeeAssignmentService(
             cafeteriaName = this.cafeteria?.name
         )
     }
-}
