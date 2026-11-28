@@ -82,10 +82,17 @@ class JwtAuthenticationFilter(
                     emptyList()
                 }
 
-                // 6. Set authentication
+                // 6. Set authentication with the shared AuthenticatedUser as principal
+                val currentUser = JwtAuthenticatedUser(
+                    userId = requireNotNull(person.id),
+                    email = person.email,
+                    role = roleName ?: "",
+                    cafeteriaId = person.cafeteria?.cafeteriaId
+                )
+
                 val authentication =
                     UsernamePasswordAuthenticationToken(
-                        email,
+                        currentUser,
                         null,
                         authorities
                     )
