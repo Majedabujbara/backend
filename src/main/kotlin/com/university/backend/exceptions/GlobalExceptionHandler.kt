@@ -7,6 +7,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import jakarta.validation.ConstraintViolationException
 
 data class ApiErrorResponse(
 
@@ -93,6 +94,49 @@ class GlobalExceptionHandler {
         )
         return ResponseEntity
             .status(HttpStatus.UNAUTHORIZED)
+            .body(response)
+    }
+
+    // Handle resources that do not exist
+    @ExceptionHandler(value = [EmployeeNotFoundException::class, CafeteriaNotFoundException::class])
+    fun handleNotFound(
+        exception: RuntimeException
+    ): ResponseEntity<ApiErrorResponse> {
+        val response = ApiErrorResponse(
+            message = exception.message ?: "Resource not found"
+        )
+        return ResponseEntity
+            .status(HttpStatus.NOT_FOUND)
+            .body(response)
+    }
+
+    // Handle assigning a non-employee user to a cafeteria
+    @ExceptionHandler(InvalidEmployeeRoleException::class)
+    fun handleInvalidEmployeeRole(
+        exception: InvalidEmployeeRoleException
+    ): ResponseEntity<ApiErrorResponse> {
+        val response = ApiErrorResponse(
+            message = exception.message ?: "Invalid employee role"
+        )
+        return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .body(response)
+    }
+
+    // Handle @Positive / @Min on path variables and request params
+    @ExceptionHandler(ConstraintViolationException::class)
+    fun handleConstraintViolation(
+        exception: ConstraintViolationException
+    ): ResponseEntity<ApiErrorResponse> {
+        val errors = exception.constraintViolations.associate {
+            it.propertyPath.toString() to it.message
+        }
+        val response = ApiErrorResponse(
+            message = "Validation failed",
+            errors = errors
+        )
+        return ResponseEntity
+            .badRequest()
             .body(response)
     }
 }
