@@ -15,6 +15,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.CorsConfigurationSource
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
+import jakarta.servlet.http.HttpServletResponse
 
 
 @Configuration
@@ -46,6 +47,14 @@ class SecurityConfig(
             .csrf { it.disable() }
             .sessionManagement {
                 it.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            }
+            .exceptionHandling {
+                it.authenticationEntryPoint { _, response, _ ->
+                    response.sendError(
+                        HttpServletResponse.SC_UNAUTHORIZED,
+                        "Unauthorized"
+                    )
+                }
             }
             .authorizeHttpRequests { auth ->
                 auth.dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()

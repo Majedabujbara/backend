@@ -41,6 +41,9 @@ class RefreshService(
             throw InvalidCredentialsException("Invalid or expired refresh token")
         }
 
+        val roleName = session.person.role?.roleName
+            ?: throw InvalidCredentialsException("Invalid or expired refresh token")
+
         val newRefreshToken = jwtService.generateRefreshToken(email)
 
         session.token = jwtService.hashToken(newRefreshToken)
@@ -54,7 +57,8 @@ class RefreshService(
 
         val newAccessToken = jwtService.generateAccessToken(
             email,
-            session.sessionId!!
+            session.sessionId!!,
+            roleName
         )
 
         return TokenResult(
