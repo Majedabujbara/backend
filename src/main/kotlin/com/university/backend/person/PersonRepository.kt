@@ -11,5 +11,7 @@ interface PersonRepository : JpaRepository<Person, Long> {
 
     @EntityGraph(attributePaths = ["role"])
     fun findByEmail(email: String): Optional<Person>
+
+
 }
 

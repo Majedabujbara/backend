@@ -109,4 +109,16 @@ class GlobalExceptionHandler {
             .status(HttpStatus.NOT_FOUND)
             .body(response)
     }
+
+    @ExceptionHandler(InvalidEmployeeAssignmentException::class)
+    fun handleInvalidEmployeeAssignment(
+        exception: InvalidEmployeeAssignmentException
+    ): ResponseEntity<ApiErrorResponse> {
+        val msg = exception.message ?: "Invalid employee assignment"
+        val response = ApiErrorResponse(
+            message = msg,
+            errors = mapOf("employeeAssignment" to msg)
+        )
+        return ResponseEntity.badRequest().body(response)
+    }
 }
