@@ -9,7 +9,7 @@ import java.util.Optional
 @Repository
 interface PersonRepository : JpaRepository<Person, Long> {
 
-    @EntityGraph(attributePaths = ["role"])
+    @EntityGraph(attributePaths = ["role", "cafeteria"])
     fun findByEmail(email: String): Optional<Person>
 }
 

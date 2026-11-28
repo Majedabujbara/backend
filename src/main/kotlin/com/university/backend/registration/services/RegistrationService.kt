@@ -55,7 +55,7 @@ class RegistrationService(
         val savedPerson = personRepository.save(person)
 
         return RegisterResponse(
-            personId = requireNotNull(savedPerson.id).toInt(), // تم تعديلها لتتوافق مع معرف الـ Person لديك
+            personId = requireNotNull(savedPerson.id).toInt(),
             fullName = savedPerson.fullName,
             email = savedPerson.email,
             roleName = savedPerson.role?.roleName ?: "CUSTOMER"

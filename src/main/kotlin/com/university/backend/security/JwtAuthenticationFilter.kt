@@ -45,6 +45,7 @@ class JwtAuthenticationFilter(
             // 2. Extract email and session ID
             val email = jwtService.extractUsername(token)
             val sessionId = jwtService.extractSessionId(token)
+            val tokenRole = jwtService.extractRole(token)
 
             if (SecurityContextHolder.getContext().authentication == null) {
 
@@ -71,21 +72,31 @@ class JwtAuthenticationFilter(
                     return
                 }
 
-                // 5. Load the user's role
+                // 5. Verify that the token role matches the user's current role
                 val roleName = person.role?.roleName
 
-                val authorities = if (roleName != null) {
-                    listOf(
-                        SimpleGrantedAuthority("ROLE_$roleName")
-                    )
-                } else {
-                    emptyList()
+                if (roleName == null || roleName != tokenRole) {
+                    SecurityContextHolder.clearContext()
+                    filterChain.doFilter(request, response)
+                    return
                 }
 
-                // 6. Set authentication
+                // 6. Create authority using the verified role
+                val authorities = listOf(
+                    SimpleGrantedAuthority("ROLE_$tokenRole")
+                )
+
+                // 7. Set authentication with the shared AuthenticatedUser as principal
+                val currentUser = JwtAuthenticatedUser(
+                    userId = requireNotNull(person.id),
+                    email = person.email,
+                    role = tokenRole,
+                    cafeteriaId = person.cafeteria?.cafeteriaId
+                )
+
                 val authentication =
                     UsernamePasswordAuthenticationToken(
-                        email,
+                        currentUser,
                         null,
                         authorities
                     )

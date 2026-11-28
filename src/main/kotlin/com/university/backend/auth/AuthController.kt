@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
-import org.springframework.security.core.Authentication
+import com.university.backend.security.CurrentUserProvider
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.CookieValue
 import com.university.backend.refresh.services.RefreshService
@@ -28,7 +28,8 @@ open class AuthController(
     private val registrationService: RegistrationService,
     private val loginService: LoginService,
     private val refreshService: RefreshService,
-    private val jwtProperties: JwtProperties
+    private val jwtProperties: JwtProperties,
+    private val currentUserProvider: CurrentUserProvider
 ) {
     @PostMapping("/register")
     open fun register(
@@ -69,12 +70,16 @@ open class AuthController(
     }
 
     @GetMapping("/me")
-    open fun getCurrentUser(
-        authentication: Authentication
-    ): ResponseEntity<Map<String, String>> {
+    open fun getCurrentUser(): ResponseEntity<Map<String, Any?>> {
+        val user = currentUserProvider.currentUser()
 
         return ResponseEntity.ok(
-            mapOf("email" to authentication.name)
+            mapOf(
+                "userId" to user.userId,
+                "email" to user.email,
+                "role" to user.role,
+                "cafeteriaId" to user.cafeteriaId
+            )
         )
     }
 

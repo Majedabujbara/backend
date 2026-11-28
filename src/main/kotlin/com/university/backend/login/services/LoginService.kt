@@ -53,7 +53,8 @@ class LoginService(
             throw InvalidCredentialsException("Invalid email or password")
         }
 
-        val roleName = person.role?.roleName ?: ""
+        val roleName = person.role?.roleName
+            ?: throw IllegalStateException("User role is missing")
 
         val personId = person.id
             ?: throw IllegalStateException("Person ID is missing")
@@ -83,7 +84,8 @@ class LoginService(
         
         val accessToken = jwtService.generateAccessToken(
             normalizedEmail,
-            savedSession.sessionId!!
+            savedSession.sessionId!!,
+            roleName
         )
 
         return LoginResult(
