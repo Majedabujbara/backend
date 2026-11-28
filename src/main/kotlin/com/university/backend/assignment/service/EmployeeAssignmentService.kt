@@ -3,8 +3,10 @@ package com.university.backend.assignment.service
 import com.university.backend.assignment.dtos.CafeteriaSummaryResponse
 import com.university.backend.assignment.dtos.EmployeeAssignmentResponse
 import com.university.backend.assignment.port.EmployeeAssignmentStore
+import com.university.backend.exceptions.CafeteriaNotFoundException
+import com.university.backend.exceptions.EmployeeNotFoundException
 import com.university.backend.exceptions.InvalidEmployeeAssignmentException
-import com.university.backend.exceptions.UserNotFoundException
+import com.university.backend.exceptions.InvalidEmployeeRoleException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -22,12 +24,12 @@ class EmployeeAssignmentService(
                         "Employee ${emp.id} must be assigned to a cafeteria"
                     )
                 val cafeteria = store.findCafeteriaById(assignedCafeteriaId)
-                    ?: throw UserNotFoundException(
+                    ?: throw CafeteriaNotFoundException(
                         "Assigned cafeteria $assignedCafeteriaId not found for employee ${emp.id}"
                     )
 
                 EmployeeAssignmentResponse(
-                    id = emp.id,
+                    id = emp.id.toLong(),
                     name = emp.name,
                     email = emp.email,
                     role = emp.role.uppercase(),
@@ -44,22 +46,22 @@ class EmployeeAssignmentService(
     @Transactional
     fun reassignEmployeeCafeteria(employeeId: Long, cafeteriaId: Int): EmployeeAssignmentResponse {
         val user = store.findUserById(employeeId)
-            ?: throw UserNotFoundException("Employee with id $employeeId not found")
+            ?: throw EmployeeNotFoundException("Employee with id $employeeId not found")
 
         if (!user.role.equals("EMPLOYEE", ignoreCase = true)) {
-            throw InvalidEmployeeAssignmentException(
+            throw InvalidEmployeeRoleException(
                 "Only EMPLOYEE accounts can be assigned to a cafeteria (role: ${user.role})"
             )
         }
 
         val targetCafeteria = store.findCafeteriaById(cafeteriaId)
-            ?: throw UserNotFoundException("Cafeteria with id $cafeteriaId not found")
+            ?: throw CafeteriaNotFoundException("Cafeteria with id $cafeteriaId not found")
 
         val updated = store.updateEmployeeCafeteria(employeeId, targetCafeteria.cafeteriaId)
         val finalCafeteriaId = updated.cafeteriaId ?: targetCafeteria.cafeteriaId
 
         return EmployeeAssignmentResponse(
-            id = updated.id,
+            id = updated.id.toLong(),
             name = updated.name,
             email = updated.email,
             role = updated.role.uppercase(),
@@ -71,5 +73,4 @@ class EmployeeAssignmentService(
             )
         )
     }
-
 }
