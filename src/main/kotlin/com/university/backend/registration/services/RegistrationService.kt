@@ -44,7 +44,7 @@ class RegistrationService(
         val hashedPassword = passwordEncoder.encode(request.password)!!
 
         val person = Person().apply {
-            val cleanFullName = request.fullName.trim()
+            fullName = request.fullName.trim()
             phone = request.phone.trim()
             email = normalizedEmail
             hashPassword = hashedPassword

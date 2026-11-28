@@ -41,6 +41,7 @@ class GlobalExceptionHandler {
         exception: MethodArgumentNotValidException
     ): ResponseEntity<ApiErrorResponse> {
 
+
         val errors = exception.bindingResult.fieldErrors.associate {
             it.field to (it.defaultMessage ?: "Invalid value")
         }
@@ -64,9 +65,7 @@ class GlobalExceptionHandler {
         val response = ApiErrorResponse(
             message = "Invalid or malformed request body"
         )
-
-        return ResponseEntity
-            .badRequest()
+        return ResponseEntity.badRequest()
             .body(response)
     }
 
@@ -137,6 +136,21 @@ class GlobalExceptionHandler {
         )
         return ResponseEntity
             .badRequest()
+            .body(response)
+    }
+
+
+    @ExceptionHandler(UserNotFoundException::class)
+    fun handleUserNotFound(
+        exception: UserNotFoundException
+    ): ResponseEntity<ApiErrorResponse> {
+
+        val response = ApiErrorResponse(
+            message = exception.message ?: "User not found"
+        )
+
+        return ResponseEntity
+            .status(HttpStatus.NOT_FOUND)
             .body(response)
     }
 }

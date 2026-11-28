@@ -15,12 +15,16 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.security.core.Authentication
 import org.springframework.web.bind.annotation.GetMapping
+import com.university.backend.refresh.dtos.RefreshRequest
+import com.university.backend.refresh.dtos.RefreshResponse
+import com.university.backend.refresh.services.RefreshService
 
 @RestController
 @RequestMapping("/api/auth")
 open class AuthController(
     private val registrationService: RegistrationService,
-    private val loginService: LoginService
+    private val loginService: LoginService,
+    private val refreshService: RefreshService
 ) {
     @PostMapping("/register")
     open fun register(
@@ -46,5 +50,13 @@ open class AuthController(
         return ResponseEntity.ok(
             mapOf("email" to authentication.name)
         )
+    }
+
+    @PostMapping("/refresh")
+    open fun refresh(
+        @Valid @RequestBody request: RefreshRequest
+    ): ResponseEntity<RefreshResponse> {
+        val response = refreshService.refresh(request)
+        return ResponseEntity.ok(response)
     }
 }

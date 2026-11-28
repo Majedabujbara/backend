@@ -1,7 +1,7 @@
-
 package com.university.backend.security
 
 import com.university.backend.person.PersonRepository
+import com.university.backend.session.SessionRepository
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -10,11 +10,13 @@ import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
+import java.time.Instant
 
 @Component
 class JwtAuthenticationFilter(
     private val jwtService: JwtService,
-    private val personRepository: PersonRepository
+    private val personRepository: PersonRepository,
+    private val sessionRepository: SessionRepository
 ) : OncePerRequestFilter() {
 
     override fun doFilterInternal(
@@ -33,39 +35,65 @@ class JwtAuthenticationFilter(
         val token = authHeader.substring(7)
 
         try {
-            if (jwtService.isTokenValid(token)) {
-
-                val email = jwtService.extractUsername(token)
-
-                if (SecurityContextHolder.getContext().authentication == null) {
-
-                    val person = personRepository.findByEmail(email)
-                        .orElse(null)
-
-                    if (person != null) {
-
-                        val roleName = person.role?.roleName
-
-                        val authorities = if (roleName != null) {
-                            listOf(
-                                SimpleGrantedAuthority("ROLE_$roleName")
-                            )
-                        } else {
-                            emptyList()
-                        }
-
-                        val authentication =
-                            UsernamePasswordAuthenticationToken(
-                                email,
-                                null,
-                                authorities
-                            )
-
-                        SecurityContextHolder.getContext()
-                            .authentication = authentication
-                    }
-                }
+            // 1. Validate that the token is a valid Access Token
+            if (!jwtService.isAccessTokenValid(token)) {
+                SecurityContextHolder.clearContext()
+                filterChain.doFilter(request, response)
+                return
             }
+
+            // 2. Extract email and session ID
+            val email = jwtService.extractUsername(token)
+            val sessionId = jwtService.extractSessionId(token)
+
+            if (SecurityContextHolder.getContext().authentication == null) {
+
+                // 3. Find the Session in the database
+                val session = sessionRepository.findById(sessionId)
+                    .orElse(null)
+
+                if (session == null ||
+                    session.revoked ||
+                    !session.expiresAt.isAfter(Instant.now())
+                ) {
+                    SecurityContextHolder.clearContext()
+                    filterChain.doFilter(request, response)
+                    return
+                }
+
+                // 4. Verify that the Session belongs to this user
+                val person = personRepository.findByEmail(email)
+                    .orElse(null)
+
+                if (person == null || session.person.id != person.id) {
+                    SecurityContextHolder.clearContext()
+                    filterChain.doFilter(request, response)
+                    return
+                }
+
+                // 5. Load the user's role
+                val roleName = person.role?.roleName
+
+                val authorities = if (roleName != null) {
+                    listOf(
+                        SimpleGrantedAuthority("ROLE_$roleName")
+                    )
+                } else {
+                    emptyList()
+                }
+
+                // 6. Set authentication
+                val authentication =
+                    UsernamePasswordAuthenticationToken(
+                        email,
+                        null,
+                        authorities
+                    )
+
+                SecurityContextHolder.getContext().authentication =
+                    authentication
+            }
+
         } catch (e: Exception) {
             SecurityContextHolder.clearContext()
         }

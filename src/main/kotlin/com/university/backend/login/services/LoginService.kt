@@ -4,38 +4,75 @@ import com.university.backend.exceptions.InvalidCredentialsException
 import com.university.backend.login.dtos.LoginRequest
 import com.university.backend.login.dtos.LoginResponse
 import com.university.backend.person.PersonRepository
+import com.university.backend.security.JwtService
+import com.university.backend.session.Session
+import com.university.backend.session.SessionRepository
+import com.university.backend.config.JwtProperties
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
-import com.university.backend.security.JwtService
+import org.springframework.transaction.annotation.Transactional
+import java.time.Instant
 
 @Service
 class LoginService(
     private val personRepository: PersonRepository,
     private val passwordEncoder: PasswordEncoder,
-    private val jwtService: JwtService
-
+    private val jwtService: JwtService,
+    private val sessionRepository: SessionRepository,
+    private val jwtProperties: JwtProperties
 ) {
 
+    @Transactional
     fun login(request: LoginRequest): LoginResponse {
+
         val normalizedEmail = request.email.trim().lowercase()
 
         val person = personRepository.findByEmail(normalizedEmail)
-            .orElseThrow { InvalidCredentialsException("Invalid email or password") }
+            .orElseThrow {
+                InvalidCredentialsException("Invalid email or password")
+            }
 
         if (!passwordEncoder.matches(request.password, person.hashPassword)) {
             throw InvalidCredentialsException("Invalid email or password")
         }
 
         val roleName = person.role?.roleName ?: ""
-        val personId = person.id?.toInt()
+
+        val personId = person.id
             ?: throw IllegalStateException("Person ID is missing")
 
+        // 1. Revoke the previous active session
+        sessionRepository.findByPerson_IdAndRevokedFalse(personId)
+            .ifPresent { activeSession ->
+                activeSession.revoked = true
+                sessionRepository.save(activeSession)
+            }
 
-        val token = jwtService.generateToken(normalizedEmail)
+        // 2. Generate a new Refresh Token
+        val refreshToken = jwtService.generateRefreshToken(normalizedEmail)
+
+        // 3. Create a new Session and store the hashed Refresh Token
+        val session = Session().apply {
+            token = jwtService.hashToken(refreshToken)
+            revoked = false
+            createdAt = Instant.now()
+            expiresAt = Instant.now().plusMillis(
+                jwtProperties.refreshTokenExpiration
+            )
+            this.person = person
+        }
+
+        val savedSession = sessionRepository.save(session)
+        
+        val accessToken = jwtService.generateAccessToken(
+            normalizedEmail,
+            savedSession.sessionId!!
+        )
 
         return LoginResponse(
-            accessToken = token,
-            personId = personId,
+            accessToken = accessToken,
+            refreshToken = refreshToken,
+            personId = personId.toInt(),
             fullName = person.fullName,
             email = person.email,
             roleName = roleName
